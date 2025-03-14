@@ -6,7 +6,5 @@ class User(TypedDict):
     user: str
     lichessname: str
 
-
-
 async def create_user(user: discord.User, lichesname: "str"):
-#
+    return
