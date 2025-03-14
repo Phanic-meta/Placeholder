@@ -8,7 +8,7 @@ TOKEN = os.getenv("LICHESS_TOKEN")
 session = berserk.TokenSession(TOKEN)
 lichesclient = berserk.Client(session)
 print(lichesclient, "Start")
-
+#
 
 class Tournament:
     def __init__(self, creator: User, guild: discord.Guild, layout: list):

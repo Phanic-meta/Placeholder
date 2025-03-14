@@ -9,3 +9,4 @@ class User(TypedDict):
 
 
 async def create_user(user: discord.User, lichesname: "str"):
+#
