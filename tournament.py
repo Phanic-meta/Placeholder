@@ -1,38 +1,37 @@
 import discord
-import berserk
-from dotenv import load_dotenv
-import os
-from user import User
-load_dotenv()
-TOKEN = os.getenv("LICHESS_TOKEN")
-session = berserk.TokenSession(TOKEN)
-lichesclient = berserk.Client(session)
-print(lichesclient, "Start")
-#
+from typing import TypedDict, NotRequired
+import mongodb
 
-class Tournament:
-    def __init__(self, creator: User, guild: discord.Guild, layout: list):
-        self.creator: User = creator
-        self.guild: discord.Guild = guild
-        self.status = "created"
-        self.players: list[User] = []
-        self.layout: list = layout
-    def add_player(self, player: User):
-        self.players.append(player)
-    def start_tournament(self):
-        self.status = "started"
+class Tournament(TypedDict):
+        _id: NotRequired[str]
+        name: str
+        creator: dict
+        guild: int
+        status: str
+        players: list[dict]
+        layout:  list
 
-    class Group:
-        def __init__(self, name: str, percent: float, maxplayers: int):
-            self.name: str = name
-            if percent > 1:
-                raise ValueError("Percent must be less than 100")
-            self.percent: float = percent
-            if maxplayers < 2:
-                raise ValueError("Maxplayers must be greater than 2")
-            self.maxplayers: int = maxplayers
+async def create_new_tournament(interaction: discord.Interaction, name: str) -> None:
+        creator = mongodb.request_user({"_id":interaction.user.id})
+        if creator is None:
+                raise Exception("You have to create an user first try:\n/create_user")
+        check = mongodb.request_tournament({"name":name, "guild":interaction.guild.id})
+        if check is None:
+                raise Exception("A tournament with that name already exists in your guild")
+        tournament: Tournament = Tournament(name=name, creator=creator, guild=interaction.guild.id, status="created", players=[], layout=[])
+        mongodb.insert_tournament(tournament)
 
-
-
-async def create_tournament(interaction: discord.Interaction) -> None:
-    tournament = Tournament()
+async def join_tournament(interaction: discord.Interaction, name: str) -> None:
+        user = mongodb.request_user({"_id":interaction.user.id})
+        if user is None:
+                raise Exception("You need to create an user first try: /create_user")
+        tournament = mongodb.request_tournament({"name":name, "guild":interaction.guild.id})
+        print(tournament)
+        if tournament is None:
+                raise Exception("This tournament does not exist in your guild")
+        if tournament["status"] != "created":
+                raise Exception("This tournament already started")
+        for player in tournament["players"]:
+                if player["_id"] == interaction.user.id:
+                        raise Exception("You allready have already joined the tournament")
+        tournament["players"].append(user)

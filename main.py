@@ -1,12 +1,11 @@
 import os
 from dotenv import load_dotenv
-#
 import discord
 from discord.ext import commands
 from discord import app_commands
 
-from tournament import create_tournament
-from user import create_user
+import tournament
+import user
 # Load Toaken from Safe File
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -28,14 +27,29 @@ async def on_ready() -> None:
 
 # Message Handling
 @tree.command(name="create_tournament", description="create a new tournament")
-async def create_tournament(interaction: discord.Interaction):
-    await create_tournament(interaction)
-    await interaction.response.send_message("Tournament created!", ephemeral=True)
+async def create_tournament(interaction: discord.Interaction, name: str):
+    try:
+        await tournament.create_new_tournament(interaction, name)
+        await interaction.response.send_message("Tournament created!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(e, ephemeral=True)
+
+@tree.command(name="join_tournament", description="join a tournament")
+async def create_tournament(interaction: discord.Interaction, name: str):
+    try:
+        await tournament.join_tournament(interaction, name)
+        await interaction.response.send_message("Tournament joind!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(e, ephemeral=True)
+
 
 @tree.command(name="create_user", description="create a new User")
 async def create_user(interaction: discord.Interaction, lichessusername: str):
-    await create_user(interaction)
-    await interaction.response.send_message("User created", ephemeral=True)
+    try:
+        await user.create_new_user(interaction, lichessusername)
+        await interaction.response.send_message("User created", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(e, ephemeral=True)
 
 #Run the Bot
 def main() -> None:
